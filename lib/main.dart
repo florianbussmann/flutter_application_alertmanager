@@ -82,23 +82,51 @@ class AlertListScreen extends StatefulWidget {
 }
 
 class _AlertListScreenState extends State<AlertListScreen> {
-  late Future<List<Alert>> _alertsFuture;
+  List<Alert> _alerts = [];
 
   @override
   void initState() {
     super.initState();
-    _alertsFuture = fetchAlerts();
+    _fetchAlerts();
   }
 
-  Future<List<Alert>> fetchAlerts() async {
+  Future<void> _fetchAlerts() async {
     final url = Uri.parse('http://prometheus-alertmanager:9093/api/v2/alerts');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonData = jsonDecode(response.body);
-      return jsonData.map((item) => Alert.fromJson(item)).toList();
+      setState(() {
+        // This call to setState tells the Flutter framework that something has
+        // changed in this State, which causes it to rerun the build method below
+        // so that the display can reflect the updated values.
+        _alerts = jsonData.map((e) => Alert.fromJson(e)).toList();
+      });
     } else {
       throw Exception('Failed to load alerts: ${response.statusCode}');
+    }
+  }
+
+  Map<String, List<Alert>> _groupBySeverity(List<Alert> alerts) {
+    final Map<String, List<Alert>> grouped = {};
+    for (var alert in alerts) {
+      final severity = alert.labels['severity'] ?? 'unknown';
+      grouped.putIfAbsent(severity, () => []).add(alert);
+    }
+    return grouped;
+  }
+
+  Color _severityColor(String severity) {
+    switch (severity.toLowerCase()) {
+      case 'critical':
+      case 'page':
+        return Colors.red;
+      case 'warning':
+        return Colors.orange;
+      case 'info':
+        return Colors.blue;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -116,6 +144,8 @@ class _AlertListScreenState extends State<AlertListScreen> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    final grouped = _groupBySeverity(_alerts);
+
     return Scaffold(
       appBar: AppBar(
         // TRY THIS: Try changing the color here to a specific color (to
@@ -126,22 +156,27 @@ class _AlertListScreenState extends State<AlertListScreen> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: FutureBuilder<List<Alert>>(
-        future: _alertsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No alerts found'));
-          }
+      body: ListView(
+        children: grouped.entries.map((entry) {
+          final severity = entry.key;
+          final alerts = entry.value;
 
-          final alerts = snapshot.data!;
-          return ListView.builder(
-            itemCount: alerts.length,
-            itemBuilder: (context, index) {
-              final alert = alerts[index];
+          return ExpansionTile(
+            initiallyExpanded: true,
+            title: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: _severityColor(severity),
+                  radius: 8,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$severity (${alerts.length})',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            children: alerts.map((alert) {
               final chipBackground = _stateColor(alert.status);
               return Card(
                 margin: const EdgeInsets.all(8.0),
@@ -187,9 +222,9 @@ class _AlertListScreenState extends State<AlertListScreen> {
                   },
                 ),
               );
-            },
+            }).toList(),
           );
-        },
+        }).toList(),
       ),
     );
   }
