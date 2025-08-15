@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,7 +33,9 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const AlertListScreen(title: 'Alerts from Prometheus® monitoring system'),
+      home: const AlertListScreen(
+        title: 'Alerts from Prometheus® monitoring system',
+      ),
     );
   }
 }
@@ -83,27 +86,40 @@ class AlertListScreen extends StatefulWidget {
 
 class _AlertListScreenState extends State<AlertListScreen> {
   List<Alert> _alerts = [];
+  String? baseUrl;
 
   @override
   void initState() {
     super.initState();
+    _initConnection();
+  }
+
+  Future<void> _initConnection() async {
+    final prefs = await SharedPreferences.getInstance();
+    baseUrl =
+        prefs.getString('alertmanager_url') ??
+        'http://prometheus-alertmanager:9093';
     _fetchAlerts();
   }
 
   Future<void> _fetchAlerts() async {
-    final url = Uri.parse('http://prometheus-alertmanager:9093/api/v2/alerts');
-    final response = await http.get(url);
+    try {
+      final url = Uri.parse('$baseUrl/api/v2/alerts');
+      final response = await http.get(url);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonData = jsonDecode(response.body);
-      setState(() {
-        // This call to setState tells the Flutter framework that something has
-        // changed in this State, which causes it to rerun the build method below
-        // so that the display can reflect the updated values.
-        _alerts = jsonData.map((e) => Alert.fromJson(e)).toList();
-      });
-    } else {
-      throw Exception('Failed to load alerts: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = jsonDecode(response.body);
+        setState(() {
+          // This call to setState tells the Flutter framework that something has
+          // changed in this State, which causes it to rerun the build method below
+          // so that the display can reflect the updated values.
+          _alerts = jsonData.map((e) => Alert.fromJson(e)).toList();
+        });
+      } else {
+        throw Exception('Failed to load alerts: ${response.statusCode}');
+      }
+    } catch (_) {
+      _promptForUrl();
     }
   }
 
@@ -136,6 +152,41 @@ class _AlertListScreenState extends State<AlertListScreen> {
         return Colors.red;
       default: // suppressed
         return Colors.grey;
+    }
+  }
+
+  Future<void> _promptForUrl() async {
+    final controller = TextEditingController(text: baseUrl);
+    final newUrl = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter Alertmanager URL'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'http://192.168.x.x:9093',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newUrl != null && newUrl.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('alertmanager_url', newUrl);
+      setState(() {
+        baseUrl = newUrl;
+      });
+      _fetchAlerts();
     }
   }
 
