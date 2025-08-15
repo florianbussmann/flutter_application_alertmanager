@@ -1,9 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:web/web.dart' as web;
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -98,7 +97,7 @@ class _AlertListScreenState extends State<AlertListScreen> {
 
   Future<void> _initConnection() async {
     final prefs = await SharedPreferences.getInstance();
-    if (kIsWeb && web.window.location.protocol == 'https:') {
+    if (kIsWeb && Uri.base.scheme == 'https') {
       // On web & served via HTTPS → use public demo Alertmanager if unset
       baseUrl =
           prefs.getString('alertmanager_url') ??
