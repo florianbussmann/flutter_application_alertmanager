@@ -19,4 +19,10 @@ jobs:
       - run: flutter doctor
       - run: flutter pub get
       - run: flutter test
-      - run: flutter build web
+      - run: flutter build web --base-href "/flutter_application_alertmanager/"
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -96,9 +97,17 @@ class _AlertListScreenState extends State<AlertListScreen> {
 
   Future<void> _initConnection() async {
     final prefs = await SharedPreferences.getInstance();
-    baseUrl =
-        prefs.getString('alertmanager_url') ??
-        'http://prometheus-alertmanager:9093';
+    if (kIsWeb && Uri.base.scheme == 'https') {
+      // On web & served via HTTPS → use public demo Alertmanager if unset
+      baseUrl =
+          prefs.getString('alertmanager_url') ??
+          'https://alertmanager.demo.prometheus.io';
+    } else {
+      // Fallback to saved URL or local instance
+      baseUrl =
+          prefs.getString('alertmanager_url') ??
+          'http://prometheus-alertmanager:9093';
+    }
     _fetchAlerts();
   }
 
