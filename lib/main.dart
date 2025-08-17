@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,6 +48,7 @@ class Alert {
   final Map<String, dynamic> annotations;
   final String startsAt;
   final String? endsAt;
+  final String? generatorURL;
 
   Alert({
     required this.status,
@@ -54,6 +56,7 @@ class Alert {
     required this.annotations,
     required this.startsAt,
     this.endsAt,
+    this.generatorURL,
   });
 
   factory Alert.fromJson(Map<String, dynamic> json) {
@@ -63,6 +66,7 @@ class Alert {
       annotations: Map<String, dynamic>.from(json['annotations'] ?? {}),
       startsAt: json['startsAt'] ?? '',
       endsAt: json['endsAt'],
+      generatorURL: json['generatorURL'],
     );
   }
 }
@@ -199,6 +203,14 @@ class _AlertListScreenState extends State<AlertListScreen> {
     }
   }
 
+  Future<void> openGeneratorUrl(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+    return;
+  }
+
   @override
   Widget build(BuildContext context) {
     // The Flutter framework has been optimized to make rerunning build methods
@@ -275,6 +287,16 @@ class _AlertListScreenState extends State<AlertListScreen> {
                             const SizedBox(height: 10),
                             Text('Labels: ${alert.labels}'),
                             Text('Annotations: ${alert.annotations}'),
+                            const SizedBox(height: 10),
+                            if (alert.generatorURL != null)
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.open_in_browser),
+                                label: const Text("Open in Prometheus®"),
+                                onPressed: () => openGeneratorUrl(
+                                  context,
+                                  alert.generatorURL!,
+                                ),
+                              ),
                           ],
                         ),
                       ),
