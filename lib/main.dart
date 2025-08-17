@@ -228,85 +228,88 @@ class _AlertListScreenState extends State<AlertListScreen> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: ListView(
-        children: grouped.entries.map((entry) {
-          final severity = entry.key;
-          final alerts = entry.value;
+      body: RefreshIndicator(
+        onRefresh: _fetchAlerts,
+        child: ListView(
+          children: grouped.entries.map((entry) {
+            final severity = entry.key;
+            final alerts = entry.value;
 
-          return ExpansionTile(
-            initiallyExpanded: true,
-            title: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: _severityColor(severity),
-                  radius: 8,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '$severity (${alerts.length})',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            children: alerts.map((alert) {
-              final chipBackground = _stateColor(alert.status);
-              return Card(
-                margin: const EdgeInsets.all(8.0),
-                child: ListTile(
-                  title: Text(alert.labels['alertname'] ?? 'Unknown Alert'),
-                  subtitle: Text(alert.annotations['description'] ?? ''),
-                  trailing: Chip(
-                    label: Text(
-                      alert.status,
-                      style: TextStyle(
-                        color:
-                            ThemeData.estimateBrightnessForColor(
-                                  chipBackground,
-                                ) ==
-                                Brightness.dark
-                            ? Colors.white
-                            : Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    backgroundColor: chipBackground,
+            return ExpansionTile(
+              initiallyExpanded: true,
+              title: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: _severityColor(severity),
+                    radius: 8,
                   ),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text(alert.labels['alertname'] ?? 'Alert'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Status: ${alert.status}'),
-                            Text('Starts: ${alert.startsAt}'),
-                            if (alert.endsAt != null)
-                              Text('Ends: ${alert.endsAt}'),
-                            const SizedBox(height: 10),
-                            Text('Labels: ${alert.labels}'),
-                            Text('Annotations: ${alert.annotations}'),
-                            const SizedBox(height: 10),
-                            if (alert.generatorURL != null)
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.open_in_browser),
-                                label: const Text("Open in Prometheus®"),
-                                onPressed: () => openGeneratorUrl(
-                                  context,
-                                  alert.generatorURL!,
-                                ),
-                              ),
-                          ],
+                  const SizedBox(width: 8),
+                  Text(
+                    '$severity (${alerts.length})',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              children: alerts.map((alert) {
+                final chipBackground = _stateColor(alert.status);
+                return Card(
+                  margin: const EdgeInsets.all(8.0),
+                  child: ListTile(
+                    title: Text(alert.labels['alertname'] ?? 'Unknown Alert'),
+                    subtitle: Text(alert.annotations['description'] ?? ''),
+                    trailing: Chip(
+                      label: Text(
+                        alert.status,
+                        style: TextStyle(
+                          color:
+                              ThemeData.estimateBrightnessForColor(
+                                    chipBackground,
+                                  ) ==
+                                  Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  },
-                ),
-              );
-            }).toList(),
-          );
-        }).toList(),
+                      backgroundColor: chipBackground,
+                    ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: Text(alert.labels['alertname'] ?? 'Alert'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Status: ${alert.status}'),
+                              Text('Starts: ${alert.startsAt}'),
+                              if (alert.endsAt != null)
+                                Text('Ends: ${alert.endsAt}'),
+                              const SizedBox(height: 10),
+                              Text('Labels: ${alert.labels}'),
+                              Text('Annotations: ${alert.annotations}'),
+                              const SizedBox(height: 10),
+                              if (alert.generatorURL != null)
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.open_in_browser),
+                                  label: const Text("Open in Prometheus®"),
+                                  onPressed: () => openGeneratorUrl(
+                                    context,
+                                    alert.generatorURL!,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
