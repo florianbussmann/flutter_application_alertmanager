@@ -21,5 +21,6 @@ platform :ios do
     capture_screenshots(workspace: "Runner.xcworkspace", scheme: "alertmanagerUITests", devices: [
       "iPad (A16)", "iPhone 16"
     ])
+    frame_screenshots()
   end
 end

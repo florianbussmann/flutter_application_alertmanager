@@ -42,5 +42,6 @@ platform :android do
       tests_apk_path: "../build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
       use_timestamp_suffix: false
     )
+    frame_screenshots()
   end
 end
