@@ -28,6 +28,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -36,6 +38,14 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+
+    dependencies {
+        testImplementation("junit:junit:4.13.2")
+        androidTestImplementation("androidx.test:core:1.5.0")
+        androidTestImplementation("androidx.test.ext:junit:1.1.2")
+        androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+        androidTestImplementation("tools.fastlane:screengrab:2.1.1")
     }
 }
 

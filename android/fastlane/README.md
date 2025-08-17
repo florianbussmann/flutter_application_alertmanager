@@ -39,6 +39,14 @@ Submit a new Beta Build to Crashlytics Beta
 
 Deploy a new version to the Google Play
 
+### android screenshots
+
+```sh
+[bundle exec] fastlane android screenshots
+```
+
+
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

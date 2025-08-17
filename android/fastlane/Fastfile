@@ -35,4 +35,12 @@ platform :android do
     gradle(task: "clean assembleRelease")
     upload_to_play_store
   end
+
+  lane :screenshots do
+    capture_android_screenshots(
+      app_apk_path: "../build/app/outputs/apk/debug/app-debug.apk",
+      tests_apk_path: "../build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      use_timestamp_suffix: false
+    )
+  end
 end

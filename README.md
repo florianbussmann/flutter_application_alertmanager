@@ -4,7 +4,7 @@ A simple [Flutter](https://flutter.dev/) app to fetch and display [Prometheus® 
 
 *Not affiliated with the official Prometheus® Alertmanager project.*
 
-![Alert overview landscape](docs/images/landscape.png)
+![Alert overview landscape](android/fastlane/metadata/android/en-US/images/phoneScreenshots/Landscape.png)
 
 ## Requirements
 
