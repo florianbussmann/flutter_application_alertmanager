@@ -19,7 +19,7 @@ jobs:
       - run: flutter doctor
       - run: flutter pub get
       - run: flutter test
-      - run: flutter build web --base-href "/${{ github.event.repository.name }}/"
+      - run: flutter build web --base-href "/${{ github.event.repository.name }}/" --wasm
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         if: github.ref == 'refs/heads/main'
