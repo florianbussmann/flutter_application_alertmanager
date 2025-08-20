@@ -118,7 +118,14 @@ class _AlertListScreenState extends State<AlertListScreen> {
   Future<void> _fetchAlerts() async {
     try {
       final url = Uri.parse('$baseUrl/api/v2/alerts');
-      final response = await http.get(url);
+      final response = await http
+          .get(url)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              return http.Response("", 408);
+            },
+          );
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = jsonDecode(response.body);
@@ -129,11 +136,40 @@ class _AlertListScreenState extends State<AlertListScreen> {
           _alerts = jsonData.map((e) => Alert.fromJson(e)).toList();
         });
       } else {
-        throw Exception('Failed to load alerts: ${response.statusCode}');
+        _showConnectionError(
+          'Failed to connect to $baseUrl with status ${response.statusCode}. Please check the URL.',
+          _fetchAlerts,
+        );
       }
     } catch (_) {
       _promptForUrl();
     }
+  }
+
+  void _showConnectionError(String message, VoidCallback onRetry) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Connection Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _promptForUrl();
+            },
+            child: const Text('Enter URL'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onRetry();
+            },
+            child: const Text('Try Again'),
+          ),
+        ],
+      ),
+    );
   }
 
   Map<String, List<Alert>> _groupBySeverity(List<Alert> alerts) {
